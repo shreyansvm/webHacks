@@ -47,6 +47,78 @@ def findCoin(soupObj):
     coinUrl = coin.find_all('a')
     print coinUrl
 
+def getCoinData(soupObj):
+    coins           = []
+    coinSymbol      = []
+    coinPrice       = []
+    coinMarketCap   = []
+    coinChange24h   = []
+    coinURL         = []
+
+    # Get 2nd to last row. First row has table headers
+    coinRows = soupObj.findAll('tr')[1:]
+
+    for eachRow in coinRows:
+        # Prints each row's full data
+        print(eachRow.prettify())
+
+    ''' Works fine '''
+    ''' Finds the name of each crypto-currency '''
+    coin_data = [ coinRows[i].find_all('td', class_="no-wrap currency-name") for i in range(len(coinRows)) ]
+    for eachCoin_data in coin_data:
+        for eachCoin in eachCoin_data:
+            aaa = eachCoin.find_all('a', class_="currency-name-container")
+            currencyNameContainerAll = [aaa[i].getText() for i in range(len(aaa))]
+            for eachCoinName in currencyNameContainerAll:
+                coins.append(eachCoinName)
+
+    ''' Works fine '''
+    '''Finds the symbol for each crypto-currency'''
+    coin_data = [ coinRows[i].find('a') for i in range(len(coinRows)) ]
+    for eachCoin_data in coin_data:
+        coinSymbol.append(eachCoin_data.get_text().strip())
+
+    ''' Works fine '''
+    '''Find current price of each crypto-currency'''
+    coin_data = [ coinRows[i].find_all('a', class_="price") for i in range(len(coinRows)) ]
+    for eachCoin_data in coin_data:
+        for eachCoin in eachCoin_data:
+            coinPrice.append(eachCoin.get_text().strip())
+
+    ''' Works fine '''
+    '''Finds market cap for each crypto-currency'''
+    coin_data = [ coinRows[i].find_all('td', class_="no-wrap market-cap text-right") for i in range(len(coinRows)) ]
+    for eachCoin_data in coin_data:
+        for eachCoin in eachCoin_data:
+            # strip() is added to remove '\n' from front and back of [u'\n$194,725,221,493\n']
+            coinMarketCap.append(eachCoin.get_text().strip())
+
+    ''' Works fine '''
+    '''Find % change in last 24hours for each crypto-currency'''
+    # TODO This only works for +ve percentage change. Skips a -ve entry . this is not good. If this is the case, then will have to handle +ve and -ve % change currencies separately. i.e. 2 different data structures for each type. Bad design!
+    coin_data = [ coinRows[i].find_all('td', class_="no-wrap percent-change positive_change text-right") for i in range(len(coinRows)) ]
+    for eachCoin_data in coin_data:
+        print "% change : " , eachCoin_data
+        for eachCoin in eachCoin_data:
+            coinChange24h.append(eachCoin.get_text().strip())
+
+    ''' Works fine '''
+    '''Find URL for each crypto-currency's webpage'''
+    coin_data = [coinRows[i].find('a') for i in range(len(coinRows))]
+    for eachCoin_data in coin_data:
+        # eachCoin_data.attrs['href'] returns subURL i.e. /currencies/bitcoin/
+            # So adding baseUrl with it.
+        coinURL.append(baseUrl + eachCoin_data.attrs['href'])
+
+    print coins
+    print coinSymbol
+    print coinPrice
+    print coinMarketCap
+    print coinChange24h
+    print coinURL
+    # TODO : A better way of returning coin data. Think of some data structure.
+    ''' End of getCoinData function'''
+
 baseUrl = "https://coinmarketcap.com"
 page = requests.get(baseUrl)
 soup = BeautifulSoup(page.text, 'html.parser')
@@ -57,17 +129,12 @@ soup = BeautifulSoup(page.text, 'html.parser')
 # print findAllCoinUrl(soup)
 # print "Total Coins on CoinMarketCap.com : ", findTotalCoins(soup)
 # findCoin(soup)
+# getCoinData(soup)
 
 
 '''
-Trying to find first two rows of the page
-    Great resource : http://savvastjortjoglou.com/nba-draft-part01-scraping.html
+NOTES :
+    Good resources :
+    https://beautiful-soup-4.readthedocs.io/en/latest/
+    http://savvastjortjoglou.com/nba-draft-part01-scraping.html
 '''
-allRows = soup.find_all('tr',limit=2)
-# print allRows
-''' This returns the 1st row of the table : Name | Market Cap | Price | Volume (24h) | Circulating Suppy | Change (24h) | Price Graph (24h) '''
-#print allRows[0].findAll('th')
-columnHeaders = [th.getText() for th in allRows[0].findAll('th')]
-for heading in columnHeaders:
-    print heading
-
