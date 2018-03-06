@@ -37,20 +37,92 @@ class cryptoCoin(object):
         coinList = soupObj.find_all(class_='no-wrap currency-name')
         return len(coinList)
 
+    ''' Finds the name of each crypto-currency '''
+    def findAllCoinNames(self, soupObj):
+        # Get 2nd to last row. First row has table headers
+        coinRows = soupObj.findAll('tr')[1:]
+        # TODO: how can you use the number of rows also a variable ? initialize in the constructor while object creation? Do this in all functions
 
-    ''' Returns URLs for all the listed crypto-coins '''
-    def findAllCoinUrl(self, soupObj):
-        coinFullUrl = []
-        urlRegex = r"<a href=\"([/a-z]+)"
+        coin_data = [ coinRows[i].find_all('td', class_="no-wrap currency-name") for i in range(len(coinRows)) ]
+        for eachCoin_data in coin_data:
+            for eachCoin in eachCoin_data:
+                aaa = eachCoin.find_all('a', class_="currency-name-container")
+                currencyNameContainerAll = [aaa[i].getText() for i in range(len(aaa))]
+                for eachCoinName in currencyNameContainerAll:
+                    self.coins.append(eachCoinName)
+        print self.coins
 
-        coinList = soupObj.find_all(class_='no-wrap currency-name')
-        for coin in coinList:
-            coinUrl = coin.find_all('a')
-            for line in coinUrl:
-                if re.search(urlRegex, str(line)):
-                    match = re.search(urlRegex, str(line))
-                    coinFullUrl.append(baseUrl + match.group(1))
-        return coinFullUrl
+
+    '''Finds the symbol for each crypto-currency'''
+    def findAllCoinSymbols(self, soupObj):
+        # Get 2nd to last row. First row has table headers
+        coinRows = soupObj.findAll('tr')[1:]
+        coin_data = [coinRows[i].find('a') for i in range(len(coinRows))]
+        for eachCoin_data in coin_data:
+            self.coinSymbol.append(eachCoin_data.get_text().strip())
+        print self.coinSymbol
+
+
+    '''Finds current price of each crypto-currency'''
+    def findAllCoinPrices(self, soupObj):
+        # Get 2nd to last row. First row has table headers
+        coinRows = soupObj.findAll('tr')[1:]
+        coin_data = [coinRows[i].find_all('a', class_="price") for i in range(len(coinRows))]
+        for eachCoin_data in coin_data:
+            for eachCoin in eachCoin_data:
+                self.coinPrice.append(eachCoin.get_text().strip())
+        print self.coinPrice
+
+
+    '''Finds market cap for each crypto-currency'''
+    def findAllCoinMarketCaps(self, soupObj):
+        # Get 2nd to last row. First row has table headers
+        coinRows = soupObj.findAll('tr')[1:]
+        coin_data = [coinRows[i].find_all('td', class_="no-wrap market-cap text-right") for i in range(len(coinRows))]
+        for eachCoin_data in coin_data:
+            for eachCoin in eachCoin_data:
+                # strip() is added to remove '\n' from front and back of [u'\n$194,725,221,493\n']
+                self.coinMarketCap.append(eachCoin.get_text().strip())
+        print self.coinMarketCap
+
+
+    '''Finds % change in last 24hours for each crypto-currency'''
+    def findAllPositiveChange24h(self, soupObj):
+        # Get 2nd to last row. First row has table headers
+        coinRows = soupObj.findAll('tr')[1:]
+        coin_data = [coinRows[i].find_all('td', class_="no-wrap percent-change positive_change text-right") for i in
+                     range(len(coinRows))]
+        for eachCoin_data in coin_data:
+            # print "% change : " , eachCoin_data
+            for eachCoin in eachCoin_data:
+                self.coinChange24h.append(eachCoin.get_text().strip())
+        # TODO : do we need to make this as coinPositiveChange24h and then have separate variable for coinNegativeChange24h ?
+        print self.coinChange24h
+
+    '''Finds URL for each crypto-currency's webpage'''
+    def findAllCoinUrls(self, soupObj):
+        # Get 2nd to last row. First row has table headers
+        coinRows = soupObj.findAll('tr')[1:]
+        coin_data = [coinRows[i].find('a') for i in range(len(coinRows))]
+        for eachCoin_data in coin_data:
+            # eachCoin_data.attrs['href'] returns subURL i.e. /currencies/bitcoin/
+            # So adding baseUrl with it.
+            self.coinURL.append(baseUrl + eachCoin_data.attrs['href'])
+
+        # Another method :
+        # coinFullUrl = []
+        # urlRegex = r"<a href=\"([/a-z]+)"
+        #
+        # coinList = soupObj.find_all(class_='no-wrap currency-name')
+        # for coin in coinList:
+        #     coinUrl = coin.find_all('a')
+        #     for line in coinUrl:
+        #         if re.search(urlRegex, str(line)):
+        #             match = re.search(urlRegex, str(line))
+        #             coinFullUrl.append(baseUrl + match.group(1))
+        # return coinFullUrl
+
+        print self.coinURL
 
     ''' Finds a user requested crypto-currency name'''
     def findCoin(self, soupObj, coinName):
@@ -70,6 +142,7 @@ class cryptoCoin(object):
         #     # Prints each row's full data
         #     print(eachRow.prettify())
 
+        # TODO : make a separate call to each function that finds name, symbol, marketcap, price, % change...etc.
         ''' Finds the name of each crypto-currency '''
         coin_data = [ coinRows[i].find_all('td', class_="no-wrap currency-name") for i in range(len(coinRows)) ]
         for eachCoin_data in coin_data:
@@ -130,9 +203,14 @@ soup = BeautifulSoup(page.text, 'html.parser')
 myCoin = cryptoCoin()
 # print(myCoin.returnPageTitle(soup))
 # print(myCoin.returnTableHeading(soup))
-# print(myCoin.findAllCoinUrl(soup))
 # print "Total Coins on CoinMarketCap.com : ", myCoin.findTotalCoins(soup)
 # myCoin.findCoin(soup,"Bitcoin")
+# myCoin.findAllCoinNames(soup)
+# myCoin.findAllCoinSymbols(soup)
+# myCoin.findAllCoinPrices(soup)
+# myCoin.findAllCoinMarketCaps(soup)
+# myCoin.findAllPositiveChange24h(soup)
+# myCoin.findAllCoinUrls(soup)
 # myCoin.getCoinData(soup)
 
 '''
