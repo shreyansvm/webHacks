@@ -14,6 +14,7 @@ class cryptoCoin(object):
         self.coinChange24h  = []
         self.coinURL        = []
 
+    '''Returns the title of the homepage'''
     def returnPageTitle(self, soupObj):
         title = soupObj.find('h1', attrs={'id': 'title'})
         '''
@@ -30,12 +31,14 @@ class cryptoCoin(object):
         return columnHeaders
 
 
+    ''' Returns total number of crypto-coins listed on the homepage '''
     def findTotalCoins(self, soupObj):
         total_coins = 0
         coinList = soupObj.find_all(class_='no-wrap currency-name')
         return len(coinList)
 
 
+    ''' Returns URLs for all the listed crypto-coins '''
     def findAllCoinUrl(self, soupObj):
         coinFullUrl = []
         urlRegex = r"<a href=\"([/a-z]+)"
@@ -49,12 +52,15 @@ class cryptoCoin(object):
                     coinFullUrl.append(baseUrl + match.group(1))
         return coinFullUrl
 
-
-    def findCoin(self, soupObj):
+    ''' Finds a user requested crypto-currency name'''
+    def findCoin(self, soupObj, coinName):
+        print "Looking for " , coinName , " ... .. ."
+        # TODO : handle how to search / print only the user requested coin
         coin = soupObj.find(class_='no-wrap currency-name')
         coinUrl = coin.find_all('a')
         print coinUrl
 
+    '''For each row i.e. each crypto-currency, finds data and stores it in respective lists'''
     def getCoinData(self, soupObj):
 
         # Get 2nd to last row. First row has table headers
@@ -64,7 +70,6 @@ class cryptoCoin(object):
         #     # Prints each row's full data
         #     print(eachRow.prettify())
 
-        ''' Works fine '''
         ''' Finds the name of each crypto-currency '''
         coin_data = [ coinRows[i].find_all('td', class_="no-wrap currency-name") for i in range(len(coinRows)) ]
         for eachCoin_data in coin_data:
@@ -74,20 +79,17 @@ class cryptoCoin(object):
                 for eachCoinName in currencyNameContainerAll:
                     self.coins.append(eachCoinName)
 
-        ''' Works fine '''
         '''Finds the symbol for each crypto-currency'''
         coin_data = [ coinRows[i].find('a') for i in range(len(coinRows)) ]
         for eachCoin_data in coin_data:
             self.coinSymbol.append(eachCoin_data.get_text().strip())
 
-        ''' Works fine '''
-        '''Find current price of each crypto-currency'''
+        '''Finds current price of each crypto-currency'''
         coin_data = [ coinRows[i].find_all('a', class_="price") for i in range(len(coinRows)) ]
         for eachCoin_data in coin_data:
             for eachCoin in eachCoin_data:
                 self.coinPrice.append(eachCoin.get_text().strip())
 
-        ''' Works fine '''
         '''Finds market cap for each crypto-currency'''
         coin_data = [ coinRows[i].find_all('td', class_="no-wrap market-cap text-right") for i in range(len(coinRows)) ]
         for eachCoin_data in coin_data:
@@ -95,8 +97,7 @@ class cryptoCoin(object):
                 # strip() is added to remove '\n' from front and back of [u'\n$194,725,221,493\n']
                 self.coinMarketCap.append(eachCoin.get_text().strip())
 
-        ''' Works fine '''
-        '''Find % change in last 24hours for each crypto-currency'''
+        '''Finds % change in last 24hours for each crypto-currency'''
         # TODO This only works for +ve percentage change. Skips a -ve entry . this is not good. If this is the case, then will have to handle +ve and -ve % change currencies separately. i.e. 2 different data structures for each type. Bad design!
         coin_data = [ coinRows[i].find_all('td', class_="no-wrap percent-change positive_change text-right") for i in range(len(coinRows)) ]
         for eachCoin_data in coin_data:
@@ -104,8 +105,7 @@ class cryptoCoin(object):
             for eachCoin in eachCoin_data:
                 self.coinChange24h.append(eachCoin.get_text().strip())
 
-        ''' Works fine '''
-        '''Find URL for each crypto-currency's webpage'''
+        '''Finds URL for each crypto-currency's webpage'''
         coin_data = [coinRows[i].find('a') for i in range(len(coinRows))]
         for eachCoin_data in coin_data:
             # eachCoin_data.attrs['href'] returns subURL i.e. /currencies/bitcoin/
@@ -132,7 +132,7 @@ myCoin = cryptoCoin()
 # print(myCoin.returnTableHeading(soup))
 # print(myCoin.findAllCoinUrl(soup))
 # print "Total Coins on CoinMarketCap.com : ", myCoin.findTotalCoins(soup)
-# myCoin.findCoin(soup)
+# myCoin.findCoin(soup,"Bitcoin")
 # myCoin.getCoinData(soup)
 
 '''
