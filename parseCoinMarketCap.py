@@ -56,7 +56,7 @@ class cryptoCoin(object):
                 currencyNameContainerAll = [aaa[i].getText() for i in range(len(aaa))]
                 for eachCoinName in currencyNameContainerAll:
                     self.coins.append(eachCoinName)
-        print self.coins
+        return self.coins
 
 
     '''Finds the symbol for each crypto-currency'''
@@ -66,7 +66,7 @@ class cryptoCoin(object):
         coin_data = [coinRows[i].find('a') for i in range(len(coinRows))]
         for eachCoin_data in coin_data:
             self.coinSymbol.append(eachCoin_data.get_text().strip())
-        print self.coinSymbol
+        return self.coinSymbol
 
 
     '''Finds current price of each crypto-currency'''
@@ -77,8 +77,7 @@ class cryptoCoin(object):
         for eachCoin_data in coin_data:
             for eachCoin in eachCoin_data:
                 self.coinPrice.append(eachCoin.get_text().strip())
-        print self.coinPrice
-
+        return self.coinPrice
 
     '''Finds market cap for each crypto-currency'''
     def findAllCoinMarketCaps(self, soupObj):
@@ -89,7 +88,7 @@ class cryptoCoin(object):
             for eachCoin in eachCoin_data:
                 # strip() is added to remove '\n' from front and back of [u'\n$194,725,221,493\n']
                 self.coinMarketCap.append(eachCoin.get_text().strip())
-        print self.coinMarketCap
+        return self.coinMarketCap
 
 
     '''Finds % change in last 24hours for each crypto-currency'''
@@ -103,7 +102,7 @@ class cryptoCoin(object):
             for eachCoin in eachCoin_data:
                 self.coinChange24h.append(eachCoin.get_text().strip())
         # TODO : do we need to make this as coinPositiveChange24h and then have separate variable for coinNegativeChange24h ?
-        print self.coinChange24h
+        return self.coinChange24h
 
     '''Finds URL for each crypto-currency's webpage'''
     def findAllCoinUrls(self, soupObj):
@@ -128,7 +127,7 @@ class cryptoCoin(object):
         #             coinFullUrl.append(baseUrl + match.group(1))
         # return coinFullUrl
 
-        print self.coinURL
+        return self.coinURL
 
     ''' Finds a user requested crypto-currency name'''
     def findCoin(self, soupObj, coinName):
@@ -149,27 +148,26 @@ class cryptoCoin(object):
         #     print(eachRow.prettify())
 
         ''' Finds the name of each crypto-currency '''
-        self.findAllCoinNames(soupObj)
+        allNames = self.findAllCoinNames(soupObj)
 
         '''Finds the symbol for each crypto-currency'''
-        self.findAllCoinSymbols(soupObj)
+        allSymbols = self.findAllCoinSymbols(soupObj)
 
         '''Finds current price of each crypto-currency'''
-        self.findAllCoinPrices(soupObj)
+        allPrices = self.findAllCoinPrices(soupObj)
 
         '''Finds market cap for each crypto-currency'''
-        self.findAllCoinMarketCaps(soupObj)
+        allMarketCaps = self.findAllCoinMarketCaps(soupObj)
 
         '''Finds positive % change in last 24hours for each crypto-currency'''
         # TODO This only works for +ve percentage change. Skips a -ve entry . this is not good. If this is the case, then will have to handle +ve and -ve % change currencies separately. i.e. 2 different data structures for each type. Bad design!
-        self.findAllPositiveChange24h(soupObj)
+        allPositiveChange24h = self.findAllPositiveChange24h(soupObj)
 
         '''Finds URL for each crypto-currency's webpage'''
-        self.findAllCoinUrls(soupObj)
+        allUrls = self.findAllCoinUrls(soupObj)
 
-        # TODO : A better way of returning coin data. Think of some data structure. Currently it is stored in attributes and printed in each function.
-
-        ''' End of getCoinData function'''
+        # Returning a nested list - much better way of returning multiple attributes.
+        return [allNames , allSymbols, allPrices, allMarketCaps, allPositiveChange24h, allUrls]
 
 
 baseUrl = "https://coinmarketcap.com"
@@ -182,13 +180,21 @@ myCoin = cryptoCoin()
 # print(myCoin.returnTableHeading(soup))
 # print "Total Coins on CoinMarketCap.com : ", myCoin.findTotalCoins(soup)
 # myCoin.findCoin(soup,"Bitcoin")
-# myCoin.findAllCoinNames(soup)
-# myCoin.findAllCoinSymbols(soup)
-# myCoin.findAllCoinPrices(soup)
-# myCoin.findAllCoinMarketCaps(soup)
-# myCoin.findAllPositiveChange24h(soup)
-# myCoin.findAllCoinUrls(soup)
-# myCoin.getCoinData(soup)
+# print(myCoin.findAllCoinNames(soup))
+# print(myCoin.findAllCoinSymbols(soup))
+# print(myCoin.findAllCoinPrices(soup))
+# print(myCoin.findAllCoinMarketCaps(soup))
+# print(myCoin.findAllPositiveChange24h(soup))
+# print(myCoin.findAllCoinUrls(soup))
+
+# # returns data of all 100 coins listed in the table on the homepage.
+# myCoinData = myCoin.getCoinData(soup)
+# print(myCoinData[0])
+# print(myCoinData[1])
+# print(myCoinData[2])
+# print(myCoinData[3])
+# print(myCoinData[4])
+# print(myCoinData[5])
 
 '''
 NOTES :
