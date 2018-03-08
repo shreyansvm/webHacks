@@ -8,13 +8,16 @@ import os, urllib2, sys, re
 class cryptoCoin(object):
 
     def __init__(self,searchRows='all'):
-        self.searchRows     = searchRows
-        self.coins          = []
-        self.coinSymbol     = []
-        self.coinPrice      = []
-        self.coinMarketCap  = []
-        self.coinChange24h  = []
-        self.coinURL        = []
+        self.searchRows             = searchRows
+        self.coins                  = []
+        self.coinSymbol             = []
+        self.coinPrice              = []
+        self.coinMarketCap          = []
+        self.coinPosAndNegChng24h   = []
+        self.coinChange24h          = []
+        self.coinNegChange24h       = []
+        self.coinURL                = []
+        # TODO : do we really need both positive and negative change variables ? Not efficient ?
 
     # TODO: Still this is a very bad way. How can individual functions call this one to get how many rows to search ? Then call this one eleswhere
     def searchRowBoundaries(self):
@@ -90,8 +93,21 @@ class cryptoCoin(object):
                 self.coinMarketCap.append(eachCoin.get_text().strip())
         return self.coinMarketCap
 
+    '''Finds both positve and negative % change in last 24hours for each crypto-currency'''
+    def findAllPosAndNegChange24h(self, soupObj):
+        # Get 2nd to last row. First row has table headers
+        coinRows = soupObj.findAll('tr')[1:]
 
-    '''Finds % change in last 24hours for each crypto-currency'''
+        # Good example of finding table data for multiple classes
+        coin_data = [coinRows[i].find_all('td', {"class": ["no-wrap percent-change positive_change text-right", "no-wrap percent-change negative_change text-right"]}) for i in
+                     range(len(coinRows))]
+        for eachCoin_data in coin_data:
+            # print "% change : " , eachCoin_data
+            for eachCoin in eachCoin_data:
+                self.coinPosAndNegChng24h.append(eachCoin.get_text().strip())
+        return self.coinPosAndNegChng24h
+
+    '''Finds positve % change in last 24hours for each crypto-currency'''
     def findAllPositiveChange24h(self, soupObj):
         # Get 2nd to last row. First row has table headers
         coinRows = soupObj.findAll('tr')[1:]
@@ -101,8 +117,20 @@ class cryptoCoin(object):
             # print "% change : " , eachCoin_data
             for eachCoin in eachCoin_data:
                 self.coinChange24h.append(eachCoin.get_text().strip())
-        # TODO : do we need to make this as coinPositiveChange24h and then have separate variable for coinNegativeChange24h ?
         return self.coinChange24h
+
+
+    '''Finds negative % change in last 24hours for each crypto-currency'''
+    def findAllNegativeChange24h(self, soupObj):
+        # Get 2nd to last row. First row has table headers
+        coinRows = soupObj.findAll('tr')[1:]
+        coin_data = [coinRows[i].find_all('td', class_="no-wrap percent-change negative_change text-right") for i in
+                     range(len(coinRows))]
+        for eachCoin_data in coin_data:
+            # print "% change : " , eachCoin_data
+            for eachCoin in eachCoin_data:
+                self.coinNegChange24h.append(eachCoin.get_text().strip())
+        return self.coinNegChange24h
 
     '''Finds URL for each crypto-currency's webpage'''
     def findAllCoinUrls(self, soupObj):
@@ -132,7 +160,7 @@ class cryptoCoin(object):
     ''' Finds a user requested crypto-currency name'''
     def findCoin(self, soupObj, coinName):
         print "Looking for " , coinName , " ... .. ."
-        # TODO : handle how to search / print only the user requested coin
+        # TODO : handle how to search / print only the user requested coin. Currently it is only finding the first row.
         coin = soupObj.find(class_='no-wrap currency-name')
         coinUrl = coin.find_all('a')
         print coinUrl
@@ -185,6 +213,9 @@ myCoin = cryptoCoin()
 # print(myCoin.findAllCoinPrices(soup))
 # print(myCoin.findAllCoinMarketCaps(soup))
 # print(myCoin.findAllPositiveChange24h(soup))
+# print(myCoin.findAllNegativeChange24h(soup))
+# print(myCoin.findAllPosAndNegChange24h(soup))
+# # print(len(myCoin.findAllPosAndNegChange24h(soup)))
 # print(myCoin.findAllCoinUrls(soup))
 
 # # returns data of all 100 coins listed in the table on the homepage.
