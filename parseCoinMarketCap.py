@@ -5,9 +5,8 @@ import os, urllib2, sys, re
 # TODO : Scrapy - already installed. Seems more powerful than BeautifulSoup. Check how can this be used.
 # TODO : how to change column's order (highest or lowest first) and read one specific table entry.
 
-# TODO : learn how to use of try and catch for exception handling
 
-class lengthMismatchError(object):
+class lengthMismatchError(Exception):
     def __init__(self,totalRows, names,symbols,prices,marketCaps,posAndNegChanges,urls):
         self.totalRows              = totalRows
         self.namesLength            = names
@@ -18,20 +17,16 @@ class lengthMismatchError(object):
         self.urlsLength             = urls
 
     def __str__(self):
+        print "Lengths of one or more coin attributes DO NOT match total no. of rows"
+        # TODO : change the print statements
         print "totalRows =", self.totalRows
-        print "\namesLength = ", self.namesLength
+        print "\tnamesLength = ", self.namesLength
         print "\tsymbolsLength = ", self.symbolsLength
         print "\tpricesLength = ", self.pricesLength
         print "\tmarketCapsLength = ", self.marketCapsLength
         print "\tposAndNegChangesLength = ", self.posAndNegChangesLength
         print "\turlsLength = ", self.urlsLength
-        # print "\tlen(allNames) = ", len(allNames)
-        # print "\tlen(allSymbols) = ", len(allSymbols)
-        # print "\tlen(allPrices) = ", len(allPrices)
-        # print "\tlen(allMarketCaps) = ", len(allMarketCaps)
-        # print "\tlen(allPosAndNegChange24h) = ", len(allPosAndNegChange24h)
-        # print "\tlen(allUrls) = ", len(allUrls)
-        return "Lengths of one or more coin attributes DO NOT match total no. of rows = ", self.totalRows
+
 
 class cryptoCoin(object):
 
@@ -216,13 +211,13 @@ class cryptoCoin(object):
         allMarketCaps = self.findAllCoinMarketCaps(soupObj)
 
         '''Finds % change (both positive and negative) in last 24hours for each crypto-currency'''
-        # allPosAndNegChange24h = self.findAllPosAndNegChange24h(soupObj)
-        allPosAndNegChange24h = self.findAllNegativeChange24h(soupObj)
+        allPosAndNegChange24h = self.findAllPosAndNegChange24h(soupObj)
+        # # Use following to test error/lengthMismatchError exception condition
+        # allPosAndNegChange24h = self.findAllNegativeChange24h(soupObj)
 
         '''Finds URL for each crypto-currency's webpage'''
         allUrls = self.findAllCoinUrls(soupObj)
 
-        incorrectLengths = 0
         try:
             if any([    len(allNames)               != len(coinRows), \
                         len(allSymbols)             != len(coinRows), \
@@ -230,12 +225,12 @@ class cryptoCoin(object):
                         len(allMarketCaps)          != len(coinRows), \
                         len(allPosAndNegChange24h)  != len(coinRows), \
                         len(allUrls)                != len(coinRows) ]) :
-                raise lengthMismatchError( len(coinRows),len(allNames),len(allSymbols),len(allPrices),len(allMarketCaps),len(allPosAndNegChange24h),len(allUrls) )
+                raise lengthMismatchError(len(coinRows),len(allNames),len(allSymbols),len(allPrices),len(allMarketCaps),len(allPosAndNegChange24h),len(allUrls) )
         except lengthMismatchError as errorObj:
             errorObj.__str__()
-            # TODO : better way of displaying error and returning an error event ?
-            return "Error"
+            return ["ERROR","ERROR","ERROR","ERROR","ERROR","ERROR"]
         else :
+            # TODO : Is there a better way of returning ? Handle it accordingly in the above error condition as well
             # Returning a nested list - much better way of returning multiple attributes.
             return [allNames, allSymbols, allPrices, allMarketCaps, allPosAndNegChange24h, allUrls]
 
@@ -264,12 +259,12 @@ myCoin = cryptoCoin()
 
 # # returns data of all 100 coins listed in the table on the homepage.
 myCoinData = myCoin.getCoinData(soup)
-# print(myCoinData[0])
-# print(myCoinData[1])
-# print(myCoinData[2])
-# print(myCoinData[3])
-# print(myCoinData[4])
-# print(myCoinData[5])
+print(myCoinData[0])
+print(myCoinData[1])
+print(myCoinData[2])
+print(myCoinData[3])
+print(myCoinData[4])
+print(myCoinData[5])
 
 '''
 NOTES :
