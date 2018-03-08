@@ -5,6 +5,34 @@ import os, urllib2, sys, re
 # TODO : Scrapy - already installed. Seems more powerful than BeautifulSoup. Check how can this be used.
 # TODO : how to change column's order (highest or lowest first) and read one specific table entry.
 
+# TODO : learn how to use of try and catch for exception handling
+
+class lengthMismatchError(object):
+    def __init__(self,totalRows, names,symbols,prices,marketCaps,posAndNegChanges,urls):
+        self.totalRows              = totalRows
+        self.namesLength            = names
+        self.symbolsLength          = symbols
+        self.pricesLength           = prices
+        self.marketCapsLength       = marketCaps
+        self.posAndNegChangesLength = posAndNegChanges
+        self.urlsLength             = urls
+
+    def __str__(self):
+        print "totalRows =", self.totalRows
+        print "\namesLength = ", self.namesLength
+        print "\tsymbolsLength = ", self.symbolsLength
+        print "\tpricesLength = ", self.pricesLength
+        print "\tmarketCapsLength = ", self.marketCapsLength
+        print "\tposAndNegChangesLength = ", self.posAndNegChangesLength
+        print "\turlsLength = ", self.urlsLength
+        # print "\tlen(allNames) = ", len(allNames)
+        # print "\tlen(allSymbols) = ", len(allSymbols)
+        # print "\tlen(allPrices) = ", len(allPrices)
+        # print "\tlen(allMarketCaps) = ", len(allMarketCaps)
+        # print "\tlen(allPosAndNegChange24h) = ", len(allPosAndNegChange24h)
+        # print "\tlen(allUrls) = ", len(allUrls)
+        return "Lengths of one or more coin attributes DO NOT match total no. of rows = ", self.totalRows
+
 class cryptoCoin(object):
 
     def __init__(self,searchRows='all'):
@@ -187,15 +215,31 @@ class cryptoCoin(object):
         '''Finds market cap for each crypto-currency'''
         allMarketCaps = self.findAllCoinMarketCaps(soupObj)
 
-        '''Finds positive % change in last 24hours for each crypto-currency'''
-        # TODO This only works for +ve percentage change. Skips a -ve entry . this is not good. If this is the case, then will have to handle +ve and -ve % change currencies separately. i.e. 2 different data structures for each type. Bad design!
-        allPositiveChange24h = self.findAllPositiveChange24h(soupObj)
+        '''Finds % change (both positive and negative) in last 24hours for each crypto-currency'''
+        # allPosAndNegChange24h = self.findAllPosAndNegChange24h(soupObj)
+        allPosAndNegChange24h = self.findAllNegativeChange24h(soupObj)
 
         '''Finds URL for each crypto-currency's webpage'''
         allUrls = self.findAllCoinUrls(soupObj)
 
-        # Returning a nested list - much better way of returning multiple attributes.
-        return [allNames , allSymbols, allPrices, allMarketCaps, allPositiveChange24h, allUrls]
+        incorrectLengths = 0
+        try:
+            if any([    len(allNames)               != len(coinRows), \
+                        len(allSymbols)             != len(coinRows), \
+                        len(allPrices)              != len(coinRows), \
+                        len(allMarketCaps)          != len(coinRows), \
+                        len(allPosAndNegChange24h)  != len(coinRows), \
+                        len(allUrls)                != len(coinRows) ]) :
+                raise lengthMismatchError( len(coinRows),len(allNames),len(allSymbols),len(allPrices),len(allMarketCaps),len(allPosAndNegChange24h),len(allUrls) )
+        except lengthMismatchError as errorObj:
+            errorObj.__str__()
+            # TODO : better way of displaying error and returning an error event ?
+            return "Error"
+        else :
+            # Returning a nested list - much better way of returning multiple attributes.
+            return [allNames, allSymbols, allPrices, allMarketCaps, allPosAndNegChange24h, allUrls]
+
+
 
 
 baseUrl = "https://coinmarketcap.com"
@@ -219,7 +263,7 @@ myCoin = cryptoCoin()
 # print(myCoin.findAllCoinUrls(soup))
 
 # # returns data of all 100 coins listed in the table on the homepage.
-# myCoinData = myCoin.getCoinData(soup)
+myCoinData = myCoin.getCoinData(soup)
 # print(myCoinData[0])
 # print(myCoinData[1])
 # print(myCoinData[2])
