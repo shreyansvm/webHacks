@@ -6,6 +6,7 @@ import os, urllib2, sys, re
 # TODO : how to change column's order (highest or lowest first) and read one specific table entry.
 
 
+'''user-defined exception class to print mismatch in lengths of rows searched and coin attributes'''
 class lengthMismatchError(Exception):
     def __init__(self,totalRows, names,symbols,prices,marketCaps,posAndNegChanges,urls):
         self.totalRows              = totalRows
@@ -235,7 +236,29 @@ class cryptoCoin(object):
             return [allNames, allSymbols, allPrices, allMarketCaps, allPosAndNegChange24h, allUrls]
 
 
+    '''Returns top 5 performing coins in terms of positive % change in last 24h'''
+    def findTopFiveBestCoins(self,soupObj):
+        allCoinsData = self.getCoinData(soupObj)
+        # tempAllPosAndNegChange24h = allCoinsData[-2]
+        # allCoinsData[-2] = [x for x in tempAllPosAndNegChange24h if x >= 0] + [x for x in tempAllPosAndNegChange24h if x < 0]
+        # OR
+        # trying to get top 5 coins
+        tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[-2],reverse=True)
+        print "tempAllCoinsSortedAsPerTopPosChange24h - " , tempAllCoinsSortedAsPerTopPosChange24h
+        topFiveCoinIndices = [ allCoinsData[-2].index(x) for x in tempAllCoinsSortedAsPerTopPosChange24h[0:5] ]
+        print "topFiveCoinIndices : " , topFiveCoinIndices
+        print "best coin - ", allCoinsData[0][topFiveCoinIndices[0]]
+        print [x for x in topFiveCoinIndices]
+        print " -----  -- - - - - -- - -- - -- - -- ------ - - -- - - -- -- - ----- - -"
 
+        topFiveCoinsNames       = [ allCoinsData[0][x] for x in topFiveCoinIndices ]
+        topFiveCoinsSymbols     = [ allCoinsData[1][x] for x in topFiveCoinIndices ]
+        topFiveCoinsPrices      = [ allCoinsData[2][x] for x in topFiveCoinIndices ]
+        topFiveCoinsMarketCaps  = [ allCoinsData[3][x] for x in topFiveCoinIndices ]
+        topFiveCoinsChange24h   = [ allCoinsData[4][x] for x in topFiveCoinIndices ]
+        topFiveCoinsUrls        = [ allCoinsData[5][x] for x in topFiveCoinIndices ]
+
+        return [ topFiveCoinsNames, topFiveCoinsSymbols, topFiveCoinsPrices, topFiveCoinsMarketCaps, topFiveCoinsChange24h, topFiveCoinsUrls ]
 
 baseUrl = "https://coinmarketcap.com"
 page = requests.get(baseUrl)
@@ -246,25 +269,39 @@ myCoin = cryptoCoin()
 # print(myCoin.returnPageTitle(soup))
 # print(myCoin.returnTableHeading(soup))
 # print "Total Coins on CoinMarketCap.com : ", myCoin.findTotalCoins(soup)
+print "##############################"
+
 # myCoin.findCoin(soup,"Bitcoin")
+
+print "##############################"
 # print(myCoin.findAllCoinNames(soup))
 # print(myCoin.findAllCoinSymbols(soup))
 # print(myCoin.findAllCoinPrices(soup))
 # print(myCoin.findAllCoinMarketCaps(soup))
-# print(myCoin.findAllPositiveChange24h(soup))
+print(myCoin.findAllPositiveChange24h(soup))
 # print(myCoin.findAllNegativeChange24h(soup))
 # print(myCoin.findAllPosAndNegChange24h(soup))
 # # print(len(myCoin.findAllPosAndNegChange24h(soup)))
 # print(myCoin.findAllCoinUrls(soup))
 
+print "##############################"
 # # returns data of all 100 coins listed in the table on the homepage.
-myCoinData = myCoin.getCoinData(soup)
-print(myCoinData[0])
-print(myCoinData[1])
-print(myCoinData[2])
-print(myCoinData[3])
-print(myCoinData[4])
-print(myCoinData[5])
+# myCoinData = myCoin.getCoinData(soup)
+# print(myCoinData[0])
+# print(myCoinData[1])
+# print(myCoinData[2])
+# print(myCoinData[3])
+# print(myCoinData[4])
+# print(myCoinData[5])
+
+print "##############################"
+topFiveCoinsData = myCoin.findTopFiveBestCoins(soup)
+print(topFiveCoinsData[0])
+print(topFiveCoinsData[1])
+print(topFiveCoinsData[2])
+print(topFiveCoinsData[3])
+print(topFiveCoinsData[4])
+print(topFiveCoinsData[5])
 
 '''
 NOTES :
