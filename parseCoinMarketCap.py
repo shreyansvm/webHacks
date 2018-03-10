@@ -246,14 +246,12 @@ class cryptoCoin(object):
         # Getting the indicies of top 5 coins to get corresponding coin attributes like name, symbol, url, etc.
         topFiveCoinIndices = [ allCoinsData[-2].index(x) for x in tempAllCoinsSortedAsPerTopPosChange24h[0:5] ]
 
-        topFiveCoinsNames       = [ allCoinsData[0][x] for x in topFiveCoinIndices ]
-        topFiveCoinsSymbols     = [ allCoinsData[1][x] for x in topFiveCoinIndices ]
-        topFiveCoinsPrices      = [ allCoinsData[2][x] for x in topFiveCoinIndices ]
-        topFiveCoinsMarketCaps  = [ allCoinsData[3][x] for x in topFiveCoinIndices ]
-        topFiveCoinsChange24h   = [ allCoinsData[4][x] for x in topFiveCoinIndices ]
-        topFiveCoinsUrls        = [ allCoinsData[5][x] for x in topFiveCoinIndices ]
-
-        return [ topFiveCoinsNames, topFiveCoinsSymbols, topFiveCoinsPrices, topFiveCoinsMarketCaps, topFiveCoinsChange24h, topFiveCoinsUrls ]
+        return [ [ allCoinsData[0][x] for x in topFiveCoinIndices ], \
+                 [allCoinsData[1][x] for x in topFiveCoinIndices], \
+                 [allCoinsData[2][x] for x in topFiveCoinIndices], \
+                 [allCoinsData[3][x] for x in topFiveCoinIndices], \
+                 [allCoinsData[4][x] for x in topFiveCoinIndices], \
+                 [allCoinsData[5][x] for x in topFiveCoinIndices] ]
 
 baseUrl = "https://coinmarketcap.com"
 page = requests.get(baseUrl)
