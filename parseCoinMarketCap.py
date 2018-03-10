@@ -243,22 +243,23 @@ class cryptoCoin(object):
     def findTopFiveBestCoins(self,soupObj):
         allCoinsData = self.getCoinData(soupObj)
 
+        # TODO : instead of hard coding the indicies, can you assign it to variable in constructor?
         coinAttributeIndex = -2
         # Getting top 5 coins as per search criteria :
         if self.topCoinCriteria == 'Change24h' :
-            tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[-2], key=lambda x: float(x.rstrip('%')), reverse=self.orderByHighest)
             coinAttributeIndex = -2
+            tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[coinAttributeIndex], key=lambda x: float(x.rstrip('%')), \
+                                                            reverse=self.orderByHighest)
         elif self.topCoinCriteria == 'Price':
-            print "All coin prices = ", allCoinsData[2]
-            # TODO: Not sorting correctly
-            tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[2],reverse=self.orderByHighest)
             coinAttributeIndex = 2
+            tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[coinAttributeIndex],key=lambda x: float(x.lstrip('$')), \
+                                                            reverse=self.orderByHighest)
         elif self.topCoinCriteria == 'MarketCap':
-            tempAllCoinsSortedAsPerTopPosChange24h = 1
+            coinAttributeIndex = 3
+            tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[coinAttributeIndex], key=lambda x: float(x.lstrip('$')),
+                                                            reverse=self.orderByHighest)
 
         topFiveCoinIndices = [allCoinsData[coinAttributeIndex].index(x) for x in tempAllCoinsSortedAsPerTopPosChange24h[0:5]]
-        print "tempAllCoinsSortedAsPerCriteria = " , tempAllCoinsSortedAsPerTopPosChange24h
-        print "topFiveCoinIndices = " , topFiveCoinIndices
 
         return [ [ allCoinsData[0][x] for x in topFiveCoinIndices ], \
                  [allCoinsData[1][x] for x in topFiveCoinIndices], \
@@ -273,25 +274,45 @@ soup = BeautifulSoup(page.text, 'html.parser')
 # print(soup.prettify())
 
 myCoin = cryptoCoin()
+print "\n############# Page Title #################"
 print(myCoin.returnPageTitle(soup))
+print "\n##############################"
+print "\n############# CoinMarketCap Table headers #################"
 print(myCoin.returnTableHeading(soup))
+print "\n##############################"
+print "\n############# Total crypto-currencies listed #################"
 print "Total Coins on CoinMarketCap.com : ", myCoin.findTotalCoins(soup)
 print "\n##############################"
 
 # myCoin.findCoin(soup,"Bitcoin")
 
-print "\n##############################"
+print "\n############# Names of all crypto-currencies #################"
 print(myCoin.findAllCoinNames(soup))
-print(myCoin.findAllCoinSymbols(soup))
-print(myCoin.findAllCoinPrices(soup))
-print(myCoin.findAllCoinMarketCaps(soup))
-print(myCoin.findAllPositiveChange24h(soup))
-print(myCoin.findAllNegativeChange24h(soup))
-print(myCoin.findAllPosAndNegChange24h(soup))
-# print(len(myCoin.findAllPosAndNegChange24h(soup)))
-print(myCoin.findAllCoinUrls(soup))
-
 print "\n##############################"
+print "\n############# Symbols of all crypto-currencies #################"
+print(myCoin.findAllCoinSymbols(soup))
+print "\n##############################"
+print "\n############# Prices of all crypto-currencies #################"
+print(myCoin.findAllCoinPrices(soup))
+print "\n##############################"
+print "\n############# Market Cap of all crypto-currencies #################"
+print(myCoin.findAllCoinMarketCaps(soup))
+print "\n##############################"
+print "\n############# All crypto-currencies with positive % change in last 24h #################"
+print(myCoin.findAllPositiveChange24h(soup))
+print "\n##############################"
+print "\n############# All crypto-currencies with negative % change in last 24h #################"
+print(myCoin.findAllNegativeChange24h(soup))
+print "\n##############################"
+print "\n############# % change (last 24h) of all crypto-currencies #################"
+print(myCoin.findAllPosAndNegChange24h(soup))
+print "\n##############################"
+# print(len(myCoin.findAllPosAndNegChange24h(soup)))
+print "\n############# URLs of all crypto-currencies #################"
+print(myCoin.findAllCoinUrls(soup))
+print "\n##############################"
+
+print "\n############# All Crypto-Currencies Data listed on homepage of CoinMarketCap #################"
 # # returns data of all 100 coins listed in the table on the homepage.
 AllCoins = cryptoCoin()
 myCoinData = AllCoins.getCoinData(soup)
@@ -301,18 +322,80 @@ print(myCoinData[2])
 print(myCoinData[3])
 print(myCoinData[4])
 print(myCoinData[5])
+print "\n##############################"
 
-print "\n############# Finding top 5 coins as per % change in last 24hours #################"
-myTopFiveCoins = cryptoCoin()
-topFiveCoinsData = myTopFiveCoins.findTopFiveBestCoins(soup)
-print "Coin Names - \t\t\t", topFiveCoinsData[0]
-print "Coin Symbols - \t\t\t", topFiveCoinsData[1]
-print "Coin Price - \t\t\t", topFiveCoinsData[2]
-print "Coin MarketCap ($) - \t", topFiveCoinsData[3]
-print "Coin % Change(24h) - \t", topFiveCoinsData[4]
-print "Coin URLs - \t\t\t", topFiveCoinsData[5]
+print "\n############# Finding top 5 crypto-currencies as per highest % change in last 24hours #################"
+myTopFiveCoinsByHighChange24h = cryptoCoin('all','Change24h',1)
+myTopFiveCoinsByHighChange24hData = myTopFiveCoinsByHighChange24h.findTopFiveBestCoins(soup)
+print "Coin Names - \t\t\t", myTopFiveCoinsByHighChange24hData[0]
+print "Coin Symbols - \t\t\t", myTopFiveCoinsByHighChange24hData[1]
+print "Coin Price - \t\t\t", myTopFiveCoinsByHighChange24hData[2]
+print "Coin MarketCap ($) - \t", myTopFiveCoinsByHighChange24hData[3]
+print "Coin % Change(24h) - \t", myTopFiveCoinsByHighChange24hData[4]
+print "Coin URLs - \t\t\t", myTopFiveCoinsByHighChange24hData[5]
 
 print "\n##############################"
+
+print "\n############# Finding top 5 crypto-currencies as per lowest % change in last 24hours #################"
+myTopFiveCoinsByLowChange24h = cryptoCoin('all','Change24h',0)
+myTopFiveCoinsByLowChange24hData = myTopFiveCoinsByLowChange24h.findTopFiveBestCoins(soup)
+print "Coin Names - \t\t\t", myTopFiveCoinsByLowChange24hData[0]
+print "Coin Symbols - \t\t\t", myTopFiveCoinsByLowChange24hData[1]
+print "Coin Price - \t\t\t", myTopFiveCoinsByLowChange24hData[2]
+print "Coin MarketCap ($) - \t", myTopFiveCoinsByLowChange24hData[3]
+print "Coin % Change(24h) - \t", myTopFiveCoinsByLowChange24hData[4]
+print "Coin URLs - \t\t\t", myTopFiveCoinsByLowChange24hData[5]
+
+print "\n##############################"
+
+print "\n############# Finding top 5 crypto-currencies by highest market capitalization #################"
+myTopFiveCoinsWithHighMarketCap = cryptoCoin('all','MarketCap',1)
+myTopFiveCoinsWithHighMarketCapData = myTopFiveCoinsWithHighMarketCap.findTopFiveBestCoins(soup)
+print "Coin Names - \t\t\t", myTopFiveCoinsWithHighMarketCapData[0]
+print "Coin Symbols - \t\t\t", myTopFiveCoinsWithHighMarketCapData[1]
+print "Coin Price - \t\t\t", myTopFiveCoinsWithHighMarketCapData[2]
+print "Coin MarketCap ($) - \t", myTopFiveCoinsWithHighMarketCapData[3]
+print "Coin % Change(24h) - \t", myTopFiveCoinsWithHighMarketCapData[4]
+print "Coin URLs - \t\t\t", myTopFiveCoinsWithHighMarketCapData[5]
+
+print "\n##############################"
+
+print "\n############# Finding top 5 crypto-currencies by lowest market capitalization #################"
+myTopFiveCoinsWithLowMarketCap = cryptoCoin('all','MarketCap',0)
+myTopFiveCoinsWithLowMarketCapData = myTopFiveCoinsWithLowMarketCap.findTopFiveBestCoins(soup)
+print "Coin Names - \t\t\t", myTopFiveCoinsWithLowMarketCapData[0]
+print "Coin Symbols - \t\t\t", myTopFiveCoinsWithLowMarketCapData[1]
+print "Coin Price - \t\t\t", myTopFiveCoinsWithLowMarketCapData[2]
+print "Coin MarketCap ($) - \t", myTopFiveCoinsWithLowMarketCapData[3]
+print "Coin % Change(24h) - \t", myTopFiveCoinsWithLowMarketCapData[4]
+print "Coin URLs - \t\t\t", myTopFiveCoinsWithLowMarketCapData[5]
+
+print "\n##############################"
+
+print "\n############# Finding top 5 most expensive crypto-currencies #################"
+myTopFiveMostExpensiveCoins = cryptoCoin('all','Price',1)
+myTopFiveMostExpensiveCoinsData = myTopFiveMostExpensiveCoins.findTopFiveBestCoins(soup)
+print "Coin Names - \t\t\t", myTopFiveMostExpensiveCoinsData[0]
+print "Coin Symbols - \t\t\t", myTopFiveMostExpensiveCoinsData[1]
+print "Coin Price - \t\t\t", myTopFiveMostExpensiveCoinsData[2]
+print "Coin MarketCap ($) - \t", myTopFiveMostExpensiveCoinsData[3]
+print "Coin % Change(24h) - \t", myTopFiveMostExpensiveCoinsData[4]
+print "Coin URLs - \t\t\t", myTopFiveMostExpensiveCoinsData[5]
+
+print "\n##############################"
+
+print "\n############# Finding top 5 least expensive crypto-currencies #################"
+myTopFiveLeastExpensiveCoins = cryptoCoin('all','Price',0)
+myTopFiveLeastExpensiveCoinsData = myTopFiveLeastExpensiveCoins.findTopFiveBestCoins(soup)
+print "Coin Names - \t\t\t", myTopFiveLeastExpensiveCoinsData[0]
+print "Coin Symbols - \t\t\t", myTopFiveLeastExpensiveCoinsData[1]
+print "Coin Price - \t\t\t", myTopFiveLeastExpensiveCoinsData[2]
+print "Coin MarketCap ($) - \t", myTopFiveLeastExpensiveCoinsData[3]
+print "Coin % Change(24h) - \t", myTopFiveLeastExpensiveCoinsData[4]
+print "Coin URLs - \t\t\t", myTopFiveLeastExpensiveCoinsData[5]
+
+print "\n##############################"
+
 '''
 NOTES :
     Good resources :
