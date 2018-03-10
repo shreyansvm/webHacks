@@ -31,7 +31,7 @@ class lengthMismatchError(Exception):
 
 class cryptoCoin(object):
 
-    def __init__(self,searchRows='all'):
+    def __init__(self,searchRows='all',topCoinCriteria='Change24h',orderByHighest=1):
         self.searchRows             = searchRows
         self.coins                  = []
         self.coinSymbol             = []
@@ -41,6 +41,9 @@ class cryptoCoin(object):
         self.coinChange24h          = []
         self.coinNegChange24h       = []
         self.coinURL                = []
+        self.topCoinCriteria        = topCoinCriteria
+        # TODO : test for orderByHighest=0
+        self.orderByHighest         = orderByHighest
         # TODO : do we really need both positive and negative change variables ? Not efficient ?
 
     # TODO: Still this is a very bad way. How can individual functions call this one to get how many rows to search ? Then call this one eleswhere
@@ -236,15 +239,26 @@ class cryptoCoin(object):
             return [allNames, allSymbols, allPrices, allMarketCaps, allPosAndNegChange24h, allUrls]
 
 
-    '''Returns top 5 performing coins in terms of positive % change in last 24h'''
+    '''Returns top 5 performing coins as per search criteria'''
     def findTopFiveBestCoins(self,soupObj):
         allCoinsData = self.getCoinData(soupObj)
 
-        # Getting top 5 coins
-        tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[-2], key=lambda x: float(x.rstrip('%')), reverse=True)
+        coinAttributeIndex = -2
+        # Getting top 5 coins as per search criteria :
+        if self.topCoinCriteria == 'Change24h' :
+            tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[-2], key=lambda x: float(x.rstrip('%')), reverse=self.orderByHighest)
+            coinAttributeIndex = -2
+        elif self.topCoinCriteria == 'Price':
+            print "All coin prices = ", allCoinsData[2]
+            # TODO: Not sorting correctly
+            tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[2],reverse=self.orderByHighest)
+            coinAttributeIndex = 2
+        elif self.topCoinCriteria == 'MarketCap':
+            tempAllCoinsSortedAsPerTopPosChange24h = 1
 
-        # Getting the indicies of top 5 coins to get corresponding coin attributes like name, symbol, url, etc.
-        topFiveCoinIndices = [ allCoinsData[-2].index(x) for x in tempAllCoinsSortedAsPerTopPosChange24h[0:5] ]
+        topFiveCoinIndices = [allCoinsData[coinAttributeIndex].index(x) for x in tempAllCoinsSortedAsPerTopPosChange24h[0:5]]
+        print "tempAllCoinsSortedAsPerCriteria = " , tempAllCoinsSortedAsPerTopPosChange24h
+        print "topFiveCoinIndices = " , topFiveCoinIndices
 
         return [ [ allCoinsData[0][x] for x in topFiveCoinIndices ], \
                  [allCoinsData[1][x] for x in topFiveCoinIndices], \
