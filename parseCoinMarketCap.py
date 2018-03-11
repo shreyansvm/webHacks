@@ -3,8 +3,6 @@ from bs4 import BeautifulSoup
 import os, urllib2, sys, re
 
 # TODO : Scrapy - already installed. Seems more powerful than BeautifulSoup. Check how can this be used.
-# TODO : how to change column's order (highest or lowest first) and read one specific table entry.
-
 
 '''user-defined exception class to print mismatch in lengths of rows searched and coin attributes'''
 class lengthMismatchError(Exception):
@@ -19,21 +17,22 @@ class lengthMismatchError(Exception):
 
     def __str__(self):
         print "Lengths of one or more coin attributes DO NOT match total no. of rows"
-        # TODO : change the print statements
-        print "totalRows =", self.totalRows
-        print "\tnamesLength = ", self.namesLength
-        print "\tsymbolsLength = ", self.symbolsLength
-        print "\tpricesLength = ", self.pricesLength
-        print "\tmarketCapsLength = ", self.marketCapsLength
-        print "\tposAndNegChangesLength = ", self.posAndNegChangesLength
-        print "\turlsLength = ", self.urlsLength
+        print "Total Rows =", self.totalRows
+        print "\ttotal length of coin Names' list \t\t\t\t= ", self.namesLength
+        print "\ttotal length of coin Symbols' list \t\t\t\t= ", self.symbolsLength
+        print "\ttotal length of coin Prices' list \t\t\t\t= ", self.pricesLength
+        print "\ttotal length of coin MarketCap' list \t\t\t\t= ", self.marketCapsLength
+        print "\ttotal length of coin +ve and -ve % change(24h) list \t\t\t= ", self.posAndNegChangesLength
+        print "\ttotal length of coin URLs' list \t\t\t\t= ", self.urlsLength
 
 
 class cryptoCoin(object):
 
     def __init__(self,searchRows='all',topCoinCriteria='Change24h',orderByHighest=1):
         self.searchRows             = searchRows
-        self.coins                  = []
+
+        # Coin attributes
+        self.coins                  = [] ;# coin Names
         self.coinSymbol             = []
         self.coinPrice              = []
         self.coinMarketCap          = []
@@ -41,15 +40,25 @@ class cryptoCoin(object):
         self.coinChange24h          = []
         self.coinNegChange24h       = []
         self.coinURL                = []
-        self.topCoinCriteria        = topCoinCriteria
-        # TODO : test for orderByHighest=0
-        self.orderByHighest         = orderByHighest
-        # TODO : do we really need both positive and negative change variables ? Not efficient ?
 
-    # TODO: Still this is a very bad way. How can individual functions call this one to get how many rows to search ? Then call this one eleswhere
-    def searchRowBoundaries(self):
+        # Indices of each crypto-currencies' attribute in the way data is formatted in this class.
+        self.coinNameIndex          = 0
+        self.coinSymbolIndex        = 1
+        self.coinPriceIndex         = 2
+        self.coinMarketCapIndex     = 3
+        self.coinPosAndNegChange24hIndex = 4
+        self.coinUrlIndex           = 5
+
+        # search options
+        self.topCoinCriteria        = topCoinCriteria
+        self.orderByHighest         = orderByHighest
+
+
+    def searchRowBoundaries(self,soupObj):
         if self.searchRows == 'all':
-            return 1
+            return soupObj.findAll('tr')[1:]
+        else:
+            return soupObj.findAll('tr')[1:int(self.searchRows) + 1]
 
     '''Returns the title of the homepage'''
     def returnPageTitle(self, soupObj):
@@ -77,7 +86,8 @@ class cryptoCoin(object):
     ''' Finds the name of each crypto-currency '''
     def findAllCoinNames(self, soupObj):
         # Get 2nd to last row. First row has table headers
-        coinRows = soupObj.findAll('tr')[1:]
+        #coinRows = soupObj.findAll('tr')[1:]
+        coinRows = self.searchRowBoundaries(soupObj)
 
         coin_data = [ coinRows[i].find_all('td', class_="no-wrap currency-name") for i in range(len(coinRows)) ]
         for eachCoin_data in coin_data:
@@ -92,7 +102,9 @@ class cryptoCoin(object):
     '''Finds the symbol for each crypto-currency'''
     def findAllCoinSymbols(self, soupObj):
         # Get 2nd to last row. First row has table headers
-        coinRows = soupObj.findAll('tr')[1:]
+        #coinRows = soupObj.findAll('tr')[1:]
+        coinRows = self.searchRowBoundaries(soupObj)
+
         coin_data = [coinRows[i].find('a') for i in range(len(coinRows))]
         for eachCoin_data in coin_data:
             self.coinSymbol.append(eachCoin_data.get_text().strip())
@@ -102,7 +114,9 @@ class cryptoCoin(object):
     '''Finds current price of each crypto-currency'''
     def findAllCoinPrices(self, soupObj):
         # Get 2nd to last row. First row has table headers
-        coinRows = soupObj.findAll('tr')[1:]
+        #coinRows = soupObj.findAll('tr')[1:]
+        coinRows = self.searchRowBoundaries(soupObj)
+
         coin_data = [coinRows[i].find_all('a', class_="price") for i in range(len(coinRows))]
         for eachCoin_data in coin_data:
             for eachCoin in eachCoin_data:
@@ -112,7 +126,9 @@ class cryptoCoin(object):
     '''Finds market cap for each crypto-currency'''
     def findAllCoinMarketCaps(self, soupObj):
         # Get 2nd to last row. First row has table headers
-        coinRows = soupObj.findAll('tr')[1:]
+        #coinRows = soupObj.findAll('tr')[1:]
+        coinRows = self.searchRowBoundaries(soupObj)
+
         coin_data = [coinRows[i].find_all('td', class_="no-wrap market-cap text-right") for i in range(len(coinRows))]
         for eachCoin_data in coin_data:
             for eachCoin in eachCoin_data:
@@ -123,7 +139,8 @@ class cryptoCoin(object):
     '''Finds both positve and negative % change in last 24hours for each crypto-currency'''
     def findAllPosAndNegChange24h(self, soupObj):
         # Get 2nd to last row. First row has table headers
-        coinRows = soupObj.findAll('tr')[1:]
+        #coinRows = soupObj.findAll('tr')[1:]
+        coinRows = self.searchRowBoundaries(soupObj)
 
         # Good example of finding table data for multiple classes
         coin_data = [coinRows[i].find_all('td', {"class": ["no-wrap percent-change positive_change text-right", "no-wrap percent-change negative_change text-right"]}) for i in
@@ -137,7 +154,9 @@ class cryptoCoin(object):
     '''Finds positve % change in last 24hours for each crypto-currency'''
     def findAllPositiveChange24h(self, soupObj):
         # Get 2nd to last row. First row has table headers
-        coinRows = soupObj.findAll('tr')[1:]
+        #coinRows = soupObj.findAll('tr')[1:]
+        coinRows = self.searchRowBoundaries(soupObj)
+
         coin_data = [coinRows[i].find_all('td', class_="no-wrap percent-change positive_change text-right") for i in
                      range(len(coinRows))]
         for eachCoin_data in coin_data:
@@ -150,7 +169,9 @@ class cryptoCoin(object):
     '''Finds negative % change in last 24hours for each crypto-currency'''
     def findAllNegativeChange24h(self, soupObj):
         # Get 2nd to last row. First row has table headers
-        coinRows = soupObj.findAll('tr')[1:]
+        #coinRows = soupObj.findAll('tr')[1:]
+        coinRows = self.searchRowBoundaries(soupObj)
+
         coin_data = [coinRows[i].find_all('td', class_="no-wrap percent-change negative_change text-right") for i in
                      range(len(coinRows))]
         for eachCoin_data in coin_data:
@@ -162,7 +183,9 @@ class cryptoCoin(object):
     '''Finds URL for each crypto-currency's webpage'''
     def findAllCoinUrls(self, soupObj):
         # Get 2nd to last row. First row has table headers
-        coinRows = soupObj.findAll('tr')[1:]
+        #coinRows = soupObj.findAll('tr')[1:]
+        coinRows = self.searchRowBoundaries(soupObj)
+
         coin_data = [coinRows[i].find('a') for i in range(len(coinRows))]
         for eachCoin_data in coin_data:
             # eachCoin_data.attrs['href'] returns subURL i.e. /currencies/bitcoin/
@@ -196,7 +219,8 @@ class cryptoCoin(object):
     def getCoinData(self, soupObj):
 
         # Get 2nd to last row. First row has table headers
-        coinRows = soupObj.findAll('tr')[1:]
+        #coinRows = soupObj.findAll('tr')[1:]
+        coinRows = self.searchRowBoundaries(soupObj)
 
         # for eachRow in coinRows:
         #     # Prints each row's full data
@@ -234,7 +258,6 @@ class cryptoCoin(object):
             errorObj.__str__()
             return ["ERROR","ERROR","ERROR","ERROR","ERROR","ERROR"]
         else :
-            # TODO : Is there a better way of returning ? Handle it accordingly in the above error condition as well
             # Returning a nested list - much better way of returning multiple attributes.
             return [allNames, allSymbols, allPrices, allMarketCaps, allPosAndNegChange24h, allUrls]
 
@@ -243,19 +266,18 @@ class cryptoCoin(object):
     def findTopFiveBestCoins(self,soupObj):
         allCoinsData = self.getCoinData(soupObj)
 
-        # TODO : instead of hard coding the indicies, can you assign it to variable in constructor?
-        coinAttributeIndex = -2
+        coinAttributeIndex = self.coinPriceIndex
         # Getting top 5 coins as per search criteria :
         if self.topCoinCriteria == 'Change24h' :
-            coinAttributeIndex = -2
+            coinAttributeIndex = self.coinPosAndNegChange24hIndex
             tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[coinAttributeIndex], key=lambda x: float(x.rstrip('%')), \
                                                             reverse=self.orderByHighest)
         elif self.topCoinCriteria == 'Price':
-            coinAttributeIndex = 2
+            coinAttributeIndex = self.coinPriceIndex
             tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[coinAttributeIndex],key=lambda x: float(x.lstrip('$')), \
                                                             reverse=self.orderByHighest)
         elif self.topCoinCriteria == 'MarketCap':
-            coinAttributeIndex = 3
+            coinAttributeIndex = self.coinMarketCapIndex
             tempAllCoinsSortedAsPerTopPosChange24h = sorted(allCoinsData[coinAttributeIndex], key=lambda x: float(x.lstrip('$')),
                                                             reverse=self.orderByHighest)
 
@@ -267,6 +289,8 @@ class cryptoCoin(object):
                  [allCoinsData[3][x] for x in topFiveCoinIndices], \
                  [allCoinsData[4][x] for x in topFiveCoinIndices], \
                  [allCoinsData[5][x] for x in topFiveCoinIndices] ]
+
+    # End of class cryptoCoin
 
 baseUrl = "https://coinmarketcap.com"
 page = requests.get(baseUrl)
@@ -394,6 +418,19 @@ print "Coin MarketCap ($) - \t", myTopFiveLeastExpensiveCoinsData[3]
 print "Coin % Change(24h) - \t", myTopFiveLeastExpensiveCoinsData[4]
 print "Coin URLs - \t\t\t", myTopFiveLeastExpensiveCoinsData[5]
 
+print "\n##############################"
+
+print "\n############# Searching only 'user-input' number of rows #################"
+totalCoinsToBeSearched = raw_input('Enter the number of rows you want to search : ')
+# TODO : how will you validate user inputs ? User enters - 0 , float, string, special characters, etc.
+print "searching top ", totalCoinsToBeSearched, " coins as per MarketCap ... ... .. .. . ."
+userCustomNumOfCoins = cryptoCoin(totalCoinsToBeSearched,'Price',0)
+print "\t Names \t\t\t: ", (userCustomNumOfCoins.findAllCoinNames(soup))
+print "\t Symbols \t\t: ", (userCustomNumOfCoins.findAllCoinSymbols(soup))
+print "\t Prices \t\t: ", (userCustomNumOfCoins.findAllCoinPrices(soup))
+print "\t MarketCap \t\t: ", (userCustomNumOfCoins.findAllCoinMarketCaps(soup))
+print "\t % Change(24h) \t: ", (userCustomNumOfCoins.findAllPosAndNegChange24h(soup))
+print "\t URLs \t\t\t: ", (userCustomNumOfCoins.findAllCoinUrls(soup))
 print "\n##############################"
 
 '''
